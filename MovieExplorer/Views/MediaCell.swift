@@ -10,6 +10,12 @@ import Kingfisher
 
 struct MediaCell: View {
     let media: Media
+    let details: MediaDetails?
+
+    init(media: Media, details: MediaDetails? = nil) {
+        self.media = media
+        self.details = details
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -25,12 +31,12 @@ struct MediaCell: View {
                     .frame(width: 100, height: 150)
                     .cornerRadius(10)
             }
-            
-            Text((media.title ?? media.name) ?? "")
+
+            Text(media.displayName)
                 .font(.headline)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
-            
+
             HStack {
                 Text("Rating: ")
                     .font(.caption)
@@ -38,8 +44,8 @@ struct MediaCell: View {
                 Text(String(format: "%.1f", media.rating))
                     .font(.caption)
             }
-            
-            if let details = media.details {
+
+            if let details = details {
                 if let budget = details.formattedBudget,
                    let revenue = details.formattedRevenue {
                     HStack {

@@ -12,64 +12,168 @@ struct MovieListView: View {
     @Binding var selectedMedia: Media?
 
     var body: some View {
-        VStack {
-            GenreSelectionView(genres: viewModel.genreList, selectedGenreID: $viewModel.selectedGenreID)
+        NavigationView {
+            VStack(spacing: 0) {
+                // Search Bar
+                SearchBar(text: $viewModel.searchQuery)
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
 
-            if let errorMessage = viewModel.errorMessage {
-                VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: 50))
-                        .foregroundColor(.red)
-                    Text(errorMessage)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.red)
-                    Button("Retry") {
-                        viewModel.refreshMediaList()
+                // Genre Selection (hidden during search)
+                if viewModel.searchQuery.isEmpty {
+                    GenreSelectionView(
+                        genres: viewModel.genreList,
+                        selectedGenreID: $viewModel.selectedGenreID
+                    )
+                }
+
+                // Content
+                if let errorMessage = viewModel.errorMessage {
+                    ErrorView(message: errorMessage) {
+                        Task {
+                            await viewModel.refreshMediaList()
+                        }
                     }
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-                }
-                .padding()
-            } else if viewModel.isLoading && viewModel.mediaList.isEmpty {
-                VStack {
-                    ProgressView()
-                        .scaleEffect(1.5)
-                    Text("Loading movies...")
-                        .padding(.top)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                        ForEach(viewModel.mediaList, id: \.uuid) { media in
-                            MediaCell(media: media)
+                } else if viewModel.isLoading && viewModel.mediaList.isEmpty {
+                    LoadingView(message: "Loading movies...")
+                } else if viewModel.mediaList.isEmpty {
+                    EmptyStateView(
+                        message: viewModel.searchQuery.isEmpty
+                            ? "No movies found in this genre"
+                            : "No movies found for '\(viewModel.searchQuery)'"
+                    )
+                } else {
+                    ScrollView {
+                        LazyVGrid(
+                            columns: [GridItem(.flexible()), GridItem(.flexible())],
+                            spacing: 16
+                        ) {
+                            ForEach(viewModel.mediaList) { media in
+                                MediaCell(
+                                    media: media,
+                                    details: viewModel.mediaDetails[media.id]
+                                )
                                 .onAppear {
-                                    if media.details == nil {
-                                        viewModel.fetchDetails(for: media)
+                                    Task {
+                                        await viewModel.fetchDetails(for: media)
                                     }
                                     if media.id == viewModel.mediaList.last?.id {
-                                        viewModel.loadMoreData()
+                                        Task {
+                                            await viewModel.loadMoreData()
+                                        }
                                     }
                                 }
                                 .onTapGesture {
                                     selectedMedia = media
                                 }
-                        }
-
-                        if viewModel.isLoading {
-                            HStack {
-                                Spacer()
-                                ProgressView()
-                                Spacer()
                             }
-                            .gridCellColumns(2)
+
+                            if viewModel.isLoading {
+                                HStack {
+                                    Spacer()
+                                    ProgressView()
+                                        .padding()
+                                    Spacer()
+                                }
+                                .gridCellColumns(2)
+                                .gridCellUnsizedAxes(.horizontal)
+                            }
                         }
+                        .padding()
                     }
-                    .padding()
+                    .refreshable {
+                        await viewModel.refreshMediaList()
+                    }
+                }
+            }
+            .navigationTitle("Movies")
+            .navigationBarTitleDisplayMode(.large)
+        }
+    }
+}
+
+// MARK: - Search Bar
+
+struct SearchBar: View {
+    @Binding var text: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.gray)
+            TextField("Search movies...", text: $text)
+                .textFieldStyle(.plain)
+                .autocorrectionDisabled()
+            if !text.isEmpty {
+                Button(action: { text = "" }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.gray)
                 }
             }
         }
+        .padding(8)
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
+    }
+}
+
+// MARK: - Error View
+
+struct ErrorView: View {
+    let message: String
+    let onRetry: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 50))
+                .foregroundColor(.red)
+            Text(message)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.red)
+                .padding(.horizontal)
+            Button("Retry") {
+                onRetry()
+            }
+            .padding()
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Loading View
+
+struct LoadingView: View {
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.5)
+            Text(message)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Empty State View
+
+struct EmptyStateView: View {
+    let message: String
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "film")
+                .font(.system(size: 50))
+                .foregroundColor(.gray)
+            Text(message)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.gray)
+                .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

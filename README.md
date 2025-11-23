@@ -1,6 +1,6 @@
 # Movie Explorer App
 
-Welcome to the Movie Explorer app, built on top of [TMDb](https://www.themoviedb.org/settings/api) API! This app allows you to explore movies and TV shows, view details about them, and discover new content based on genres. Below you'll find information on how to build the app, its general architecture, and the libraries used.
+Welcome to the Movie Explorer app, built with **Swift 6** on top of the [TMDb](https://www.themoviedb.org/settings/api) API! This modern iOS application allows you to explore movies and TV shows, search for content, view details, and discover new media based on genres. Built using the latest Swift concurrency features for optimal performance and safety.
 
 ## How to Build the App
 
@@ -24,13 +24,28 @@ Welcome to the Movie Explorer app, built on top of [TMDb](https://www.themoviedb
 
 ## General Architecture
 
-The app follows a **MVVM (Model-View-ViewModel)** architecture pattern for clean separation of concerns and improved testability.
+The app follows a **modern MVVM (Model-View-ViewModel)** architecture with a dedicated service layer:
 
-- **Model**: Represents the data and business logic. Includes the data models and network service for fetching data.
+- **Model**: Sendable data models with thread-safe design for Swift 6 concurrency
+  - All models conform to `Sendable` protocol
+  - Static cached formatters for optimal performance
+  - Immutable structs to prevent data races
 
-- **View**: Displays the UI elements to the user. Written using SwiftUI for a modern and declarative UI.
+- **Service Layer**: Actor-based API service using async/await
+  - `TMDBAPIService` actor for thread-safe network operations
+  - Comprehensive error handling with custom `APIError` types
+  - Fully async/await based networking
 
-- **ViewModel**: Acts as a bridge between the Model and View. Contains presentation logic and data transformation.
+- **ViewModel**: `@MainActor` annotated view models for safe UI updates
+  - Generic `MediaListViewModel` for both movies and TV shows
+  - Reactive state management with `@Published` properties
+  - Async methods for all network operations
+
+- **View**: Modern SwiftUI views with async/await support
+  - Pull-to-refresh functionality
+  - Real-time search
+  - Loading and error states
+  - Infinite scrolling pagination
 
 ## Libraries Used
 
@@ -44,11 +59,28 @@ The app utilizes the following libraries:
 
 ## Features
 
-- Browse movies and TV shows by genre
-- View detailed information including ratings, budgets, revenue, and overviews
-- Infinite scrolling pagination
-- Loading states and error handling with retry functionality
-- Responsive image loading and caching
+### Core Functionality
+- **Dual Browse Mode**: Separate tabs for movies and TV shows
+- **Genre Filtering**: Browse content by genre with visual genre selector
+- **Real-time Search**: Search for movies and TV shows as you type
+- **Infinite Scrolling**: Seamless pagination for endless browsing
+- **Pull-to-Refresh**: Swipe down to refresh content
+- **Detail Views**: View ratings, overviews, and poster images
+
+### User Experience
+- **Loading States**: Visual feedback during data fetches
+- **Error Handling**: Comprehensive error messages with retry functionality
+- **Empty States**: Friendly messages when no content is found
+- **Image Caching**: Fast image loading with Kingfisher
+- **Smooth Animations**: Polished UI transitions
+
+### Technical Highlights
+- **Swift 6 Concurrency**: Full async/await implementation
+- **Thread Safety**: `@MainActor` annotations and `Sendable` conformance
+- **Data Race Protection**: Compile-time safety guarantees
+- **Performance Optimized**: Static cached formatters and lazy loading
+- **Clean Architecture**: Separation of concerns with service layer
+- **Type-Safe Networking**: Decodable models with error handling
 
 ## Feedback and Contributions
 

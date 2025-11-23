@@ -27,28 +27,21 @@ struct MediaDetailsView: View {
                         .cornerRadius(10)
                 }
                 
-                Text(media.title ?? media.name ?? "Unknown Title")
+                Text(media.displayName)
                     .font(.title)
-                
-                Text("Rating: \(String(format: "%.1f", media.rating))")
-                    .font(.headline)
-                
-                if let details = media.details {
-                    VStack(spacing: 8) {
-                        if let budget = details.formattedBudget,
-                           let revenue = details.formattedRevenue {
-                            DetailRow(title: "Budget", value: "$\(budget)")
-                            DetailRow(title: "Revenue", value: "$\(revenue)")
-                        }
-                        
-                        if let lastAirDate = details.formattedLastAirDate,
-                           let lastEpisodeName = details.lastEpisodeName?.name {
-                            DetailRow(title: "Last Air Date", value: lastAirDate)
-                            DetailRow(title: "Last Episode", value: lastEpisodeName)
-                        }
-                    }
+                    .fontWeight(.bold)
+
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                        .font(.caption)
+                    Text(String(format: "%.1f", media.rating))
+                        .font(.headline)
+                    Text("/ 10")
+                        .font(.caption)
+                        .foregroundColor(.gray)
                 }
-                
+
                 if let overview = media.overview {
                     Text("Overview:")
                         .font(.headline)
@@ -58,7 +51,7 @@ struct MediaDetailsView: View {
             .padding()
         }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarTitle(media.title ?? media.name ?? "Details")
+        .navigationBarTitle(media.displayName)
     }
 }
 

@@ -6,119 +6,188 @@
 //
 
 import Foundation
-import Alamofire
 
+@MainActor
 class MediaListViewModel: ObservableObject {
-    private let apiKey = Constants.apiKey
+    private let apiService: TMDBAPIService
     let mediaType: MediaType
 
     @Published var currentPage: Int = 1
     @Published var genreList: [Genre] = []
     @Published var mediaList: [Media] = []
+    @Published var mediaDetails: [Int: MediaDetails] = [:]
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
-
-    @Published var selectedGenreID: Int = 0 {
+    @Published var searchQuery: String = "" {
         didSet {
-            print("Selected Genre ID: \(selectedGenreID)")
-            currentPage = 1
-            mediaList = []
-            fetchMediaByGenre()
+            if searchQuery.isEmpty {
+                // Return to genre-based browsing
+                Task {
+                    await refreshMediaList()
+                }
+            } else {
+                // Perform search
+                Task {
+                    await performSearch()
+                }
+            }
         }
     }
 
-    init(mediaType: MediaType) {
-        self.mediaType = mediaType
-        fetchGenreList()
+    @Published var selectedGenreID: Int = 0 {
+        didSet {
+            guard selectedGenreID != oldValue else { return }
+            print("Selected Genre ID: \(selectedGenreID)")
+            currentPage = 1
+            mediaList = []
+            Task {
+                await fetchMediaByGenre()
+            }
+        }
     }
 
-    func fetchGenreList() {
-        let parameters: [String: Any] = [
-            "api_key": apiKey
-        ]
+    init(mediaType: MediaType, apiService: TMDBAPIService = TMDBAPIService()) {
+        self.mediaType = mediaType
+        self.apiService = apiService
+        Task {
+            await fetchGenreList()
+        }
+    }
 
-        let url = Constants.API.genreListURL(for: mediaType)
+    // MARK: - Genre Fetching
 
+    func fetchGenreList() async {
         isLoading = true
         errorMessage = nil
 
-        AF.request(url, parameters: parameters)
-            .responseDecodable(of: GenreListResponse.self) { [weak self] response in
-                guard let self = self else { return }
-                self.isLoading = false
-
-                switch response.result {
-                case .success(let genreListResponse):
-                    self.genreList = genreListResponse.genres
-                    if let firstGenre = self.genreList.first {
-                        self.selectedGenreID = firstGenre.id
-                    }
-                case .failure(let error):
-                    self.errorMessage = "Failed to load genres: \(error.localizedDescription)"
-                    print("Error fetching genre list: \(error)")
-                }
+        do {
+            let genres = try await apiService.fetchGenres(for: mediaType)
+            genreList = genres
+            if let firstGenre = genreList.first {
+                selectedGenreID = firstGenre.id
             }
+        } catch {
+            errorMessage = error.localizedDescription
+            print("Error fetching genre list: \(error)")
+        }
+
+        isLoading = false
     }
 
-    func fetchMediaByGenre() {
-        let parameters: [String: Any] = [
-            "api_key": apiKey,
-            "with_genres": selectedGenreID,
-            "page": currentPage
-        ]
+    // MARK: - Media Fetching
 
-        let url = Constants.API.discoverURL(for: mediaType)
+    func fetchMediaByGenre() async {
+        guard !isLoading else { return }
 
         isLoading = true
         errorMessage = nil
 
         print("Fetching media for genre ID: \(selectedGenreID), media type: \(mediaType)")
-        AF.request(url, parameters: parameters)
-            .validate()
-            .responseDecodable(of: MediaResponse.self) { [weak self] response in
-                guard let self = self else { return }
-                self.isLoading = false
 
-                switch response.result {
-                case .success(let mediaResponse):
-                    self.mediaList += mediaResponse.results
-                case .failure(let error):
-                    self.errorMessage = "Failed to load \(self.mediaType == .movie ? "movies" : "TV shows"): \(error.localizedDescription)"
-                    print("Error fetching media: \(error)")
-                }
-            }
+        do {
+            let media = try await apiService.discoverMedia(
+                genreID: selectedGenreID,
+                page: currentPage,
+                mediaType: mediaType
+            )
+            mediaList += media
+        } catch {
+            errorMessage = error.localizedDescription
+            print("Error fetching media: \(error)")
+        }
+
+        isLoading = false
     }
 
-    func fetchDetails(for media: Media) {
-        let detailsURL = Constants.API.detailsURL(for: mediaType, id: media.id)
-        let parameters: [String: Any] = [
-            "api_key": apiKey
-        ]
+    // MARK: - Search
 
-        AF.request(detailsURL, parameters: parameters)
-            .responseDecodable(of: MediaDetails.self) { [weak self] response in
-                guard let self = self else { return }
-
-                switch response.result {
-                case .success(let details):
-                    if let index = self.mediaList.firstIndex(where: { $0.id == media.id }) {
-                        self.mediaList[index].details = details
-                    }
-                case .failure(let error):
-                    print("Error fetching media details: \(error)")
-                }
-            }
-    }
-
-    func loadMoreData() {
+    func performSearch() async {
+        guard !searchQuery.isEmpty else { return }
         guard !isLoading else { return }
-        currentPage += 1
-        fetchMediaByGenre()
-    }
 
-    func refreshMediaList() {
+        isLoading = true
+        errorMessage = nil
         currentPage = 1
         mediaList = []
-        fetchMediaByGenre()
+
+        do {
+            let media = try await apiService.searchMedia(
+                query: searchQuery,
+                page: currentPage,
+                mediaType: mediaType
+            )
+            mediaList = media
+        } catch {
+            errorMessage = error.localizedDescription
+            print("Error searching media: \(error)")
+        }
+
+        isLoading = false
+    }
+
+    // MARK: - Details Fetching
+
+    func fetchDetails(for media: Media) async {
+        // Skip if we already have details
+        guard mediaDetails[media.id] == nil else { return }
+
+        do {
+            let details = try await apiService.fetchMediaDetails(
+                id: media.id,
+                mediaType: mediaType
+            )
+            mediaDetails[media.id] = details
+        } catch {
+            print("Error fetching media details: \(error)")
+        }
+    }
+
+    // MARK: - Pagination
+
+    func loadMoreData() async {
+        guard !isLoading else { return }
+        currentPage += 1
+
+        if searchQuery.isEmpty {
+            await fetchMediaByGenre()
+        } else {
+            await loadMoreSearchResults()
+        }
+    }
+
+    private func loadMoreSearchResults() async {
+        guard !searchQuery.isEmpty else { return }
+        guard !isLoading else { return }
+
+        isLoading = true
+
+        do {
+            let media = try await apiService.searchMedia(
+                query: searchQuery,
+                page: currentPage,
+                mediaType: mediaType
+            )
+            mediaList += media
+        } catch {
+            errorMessage = error.localizedDescription
+            print("Error loading more search results: \(error)")
+        }
+
+        isLoading = false
+    }
+
+    // MARK: - Refresh
+
+    func refreshMediaList() async {
+        currentPage = 1
+        mediaList = []
+        mediaDetails = [:]
+        errorMessage = nil
+
+        if searchQuery.isEmpty {
+            await fetchMediaByGenre()
+        } else {
+            await performSearch()
+        }
     }
 }
