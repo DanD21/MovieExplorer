@@ -50,6 +50,7 @@ struct TVShowListView: View {
                             ForEach(viewModel.mediaList) { media in
                                 MediaCell(
                                     media: media,
+                                    mediaType: .tv,
                                     details: viewModel.mediaDetails[media.id]
                                 )
                                 .onAppear {

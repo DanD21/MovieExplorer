@@ -51,6 +51,7 @@ struct MovieListView: View {
                             ForEach(viewModel.mediaList) { media in
                                 MediaCell(
                                     media: media,
+                                    mediaType: .movie,
                                     details: viewModel.mediaDetails[media.id]
                                 )
                                 .onAppear {
