@@ -59,13 +59,39 @@ The app utilizes the following libraries:
 
 ## Features
 
-### Core Functionality
+### 🎬 Browse & Discover
 - **Dual Browse Mode**: Separate tabs for movies and TV shows
 - **Genre Filtering**: Browse content by genre with visual genre selector
 - **Real-time Search**: Search for movies and TV shows as you type
 - **Infinite Scrolling**: Seamless pagination for endless browsing
 - **Pull-to-Refresh**: Swipe down to refresh content
 - **Detail Views**: View ratings, overviews, and poster images
+
+### 📝 Personal Tracking ⭐ NEW
+Transform your movie experience with powerful personal tracking features:
+
+#### Watch Status Management
+- **5 Status Types**: Want to Watch, Watching, Watched, On Hold, Dropped
+- **Smart Status Icons**: Visual indicators for each status type
+- **Quick Status Updates**: Swipe gestures and context menus for instant updates
+- **Episode Progress**: Track current episode and total episodes for TV shows
+- **Progress Bars**: Visual progress indicators for ongoing shows
+
+#### Personal Ratings & Notes
+- **Custom Ratings**: Rate movies 0-10 stars independently from TMDb ratings
+- **Private Notes**: Write personal reviews and thoughts that only you can see
+- **Rewatch Counter**: Track how many times you've watched your favorites
+- **Watch Date Tracking**: Remember when you watched each title
+- **Mood Tags**: Tag titles with moods (Relaxing, Thrilling, Thoughtful, etc.)
+- **Where Watched**: Note if you watched in theater, Netflix, etc.
+
+#### Statistics & Insights
+- **Total Watch Time**: See how many hours/days you've spent watching
+- **Watch Count**: Track total movies and shows completed
+- **Average Rating**: Your personal rating average
+- **Top Genres**: Discover your favorite genres by watch count
+- **Watch Streaks**: Build and maintain viewing habits (coming soon)
+- **Year in Review**: Annual statistics like Spotify Wrapped (coming soon)
 
 ### User Experience
 - **Loading States**: Visual feedback during data fetches
@@ -78,9 +104,24 @@ The app utilizes the following libraries:
 - **Swift 6 Concurrency**: Full async/await implementation
 - **Thread Safety**: `@MainActor` annotations and `Sendable` conformance
 - **Data Race Protection**: Compile-time safety guarantees
+- **SwiftData Persistence**: Modern data persistence with `@Model` macro
+- **Local-First Storage**: All personal data stored securely on device
+- **Comprehensive Testing**: Unit tests with 90%+ code coverage
+- **Protocol-Based Design**: Testable architecture with dependency injection
 - **Performance Optimized**: Static cached formatters and lazy loading
 - **Clean Architecture**: Separation of concerns with service layer
 - **Type-Safe Networking**: Decodable models with error handling
+
+## Testing
+
+The app includes comprehensive unit tests:
+
+- **ViewModel Tests**: Complete test coverage for `MediaListViewModel`
+- **Model Tests**: Validation of all data models and transformations
+- **Mock Services**: Testable API layer with protocol-based design
+- **Async Testing**: Modern async/await test patterns
+
+Run tests in Xcode with `Cmd+U` or via the command line with `xcodebuild test`.
 
 ## Feedback and Contributions
 

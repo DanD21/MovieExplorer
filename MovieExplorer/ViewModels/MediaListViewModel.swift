@@ -9,7 +9,7 @@ import Foundation
 
 @MainActor
 class MediaListViewModel: ObservableObject {
-    private let apiService: TMDBAPIService
+    private let apiService: any TMDBAPIServiceProtocol
     let mediaType: MediaType
 
     @Published var currentPage: Int = 1
@@ -46,9 +46,9 @@ class MediaListViewModel: ObservableObject {
         }
     }
 
-    init(mediaType: MediaType, apiService: TMDBAPIService = TMDBAPIService()) {
+    init(mediaType: MediaType, apiService: (any TMDBAPIServiceProtocol)? = nil) {
         self.mediaType = mediaType
-        self.apiService = apiService
+        self.apiService = apiService ?? TMDBAPIService()
         Task {
             await fetchGenreList()
         }
