@@ -10,13 +10,11 @@ import Kingfisher
 
 struct MediaCell: View {
     let media: Media
-    let baseURL = "https://image.tmdb.org/t/p/"
-    let imageSize = "w500"
-    
+
     var body: some View {
         VStack(spacing: 8) {
-            if let posterPath = media.posterPath {
-                let imageURL = URL(string: baseURL + imageSize + posterPath)!
+            if let posterPath = media.posterPath,
+               let imageURL = URL(string: Constants.Images.baseURL + Constants.Images.posterSizeSmall + posterPath) {
                 KFImage(imageURL)
                     .resizable()
                     .aspectRatio(contentMode: .fit)

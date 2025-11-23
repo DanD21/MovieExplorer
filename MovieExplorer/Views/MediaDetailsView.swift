@@ -10,14 +10,12 @@ import Kingfisher
 
 struct MediaDetailsView: View {
     let media: Media
-    let baseURL = "https://image.tmdb.org/t/p/"
-    let imageSize = "w780"
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                if let posterPath = media.posterPath {
-                    let imageURL = URL(string: baseURL + imageSize + posterPath)!
+                if let posterPath = media.posterPath,
+                   let imageURL = URL(string: Constants.Images.baseURL + Constants.Images.posterSizeLarge + posterPath) {
                     KFImage(imageURL)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -25,7 +23,7 @@ struct MediaDetailsView: View {
                         .cornerRadius(10)
                 } else {
                     Color.gray
-                        .frame(width: 100, height: 150)
+                        .frame(width: 250, height: 300)
                         .cornerRadius(10)
                 }
                 

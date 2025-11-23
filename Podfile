@@ -6,8 +6,6 @@ target 'MovieExplorer' do
   use_frameworks!
 
   # Pods for MovieExplorer
-	pod 'RxSwift'
-	pod 'RxCocoa'
 	pod 'Kingfisher'
 	pod 'Alamofire'
 end

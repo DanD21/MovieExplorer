@@ -8,7 +8,15 @@ Welcome to the Movie Explorer app, built on top of [TMDb](https://www.themoviedb
 
 2. **Install Dependencies**: The app uses CocoaPods for managing dependencies. Run `pod install` in the project directory to install the required libraries.
 
-3. **API Key**: To fetch data from The Movie Database (TMDb) API, you'll need an API key. Get your API key from the [TMDb website](https://www.themoviedb.org/settings/api) and add it to the `Constants.swift` file.
+3. **API Key Configuration**:
+   - To fetch data from The Movie Database (TMDb) API, you'll need an API key
+   - Get your API key from the [TMDb website](https://www.themoviedb.org/settings/api)
+   - Add it to the `Constants.swift` file (replace `YOUR_TMDB_API_KEY`)
+
+   **⚠️ Security Warning**:
+   - Never commit your API key to version control
+   - Add `Constants.swift` to `.gitignore` before committing
+   - For production apps, use environment variables or secure key storage solutions like Keychain
 
 4. **Open Xcode**: Open the `.xcworkspace` file using Xcode.
 
@@ -30,11 +38,17 @@ The app utilizes the following libraries:
 
 - **Alamofire**: A Swift-based HTTP networking library for making API requests.
 
-- **RxSwift and RxCocoa**: Reactive programming libraries that simplify handling asynchronous events and data streams.
-
 - **Kingfisher**: A library for downloading and caching images from the web.
 
 - **CocoaPods**: Dependency manager for Swift and Objective-C projects.
+
+## Features
+
+- Browse movies and TV shows by genre
+- View detailed information including ratings, budgets, revenue, and overviews
+- Infinite scrolling pagination
+- Loading states and error handling with retry functionality
+- Responsive image loading and caching
 
 ## Feedback and Contributions
 
